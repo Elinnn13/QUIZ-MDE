@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizizz MDE Week 1-6</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Background Glow -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="relative z-10 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">📚</span>
+            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">MDE Quizizz (Week 1-6)</span>
+        </div>
+        <div id="quiz-header-info" class="hidden text-sm text-slate-400 font-medium">
+            Soal <span id="current-q-num" class="text-white font-bold">1</span> dari <span id="total-q-num">109</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="relative z-10 flex-grow flex items-center justify-center p-4 sm:p-6">
+        
+        <!-- 1. START SCREEN -->
+        <div id="start-screen" class="w-full max-w-xl bg-slate-900/80 border border-slate-800/80 p-8 rounded-3xl shadow-2xl backdrop-blur-xl text-center space-y-6">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-3xl mb-2">
+                🎓
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                Manajemen Data Enterprise <span class="text-indigo-400">Quiz</span>
+            </h1>
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                Uji pemahamanmu dengan <strong class="text-white">109 soal pilihan ganda</strong> lengkap dari Week 1 sampai Week 6[cite: 2]. Dilengkapi timer 30 detik per soal, pengacakan soal, dan review jawaban!
+            </p>
+            
+            <div class="grid grid-cols-3 gap-3 py-2">
+                <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-2xl text-center">
+                    <div class="text-lg font-bold text-indigo-400">109</div>
+                    <div class="text-xs text-slate-400">Soal[cite: 2]</div>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-2xl text-center">
+                    <div class="text-lg font-bold text-purple-400">30s</div>
+                    <div class="text-xs text-slate-400">Timer/Soal</div>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-700/50 p-3 rounded-2xl text-center">
+                    <div class="text-lg font-bold text-emerald-400">Acak</div>
+                    <div class="text-xs text-slate-400">Opsi & Soal</div>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-base shadow-lg shadow-indigo-500/25 hover:from-indigo-500 hover:to-purple-500 transition-all cursor-pointer transform active:scale-98">
+                Mulai Kuis Sekarang 🚀
+            </button>
+        </div>
+
+        <!-- 2. QUIZ SCREEN -->
+        <div id="quiz-screen" class="hidden w-full max-w-2xl bg-slate-900/80 border border-slate-800/80 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl space-y-6">
+            <div class="space-y-3">
+                <div class="flex justify-between items-center text-xs sm:text-sm font-medium text-slate-400">
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                        <span id="progress-text">Soal 1 dari 109[cite: 2]</span>
+                    </div>
+                    <div id="timer-box" class="flex items-center space-x-1.5 bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-slate-200">
+                        <span>⏳</span>
+                        <span id="time-left" class="font-bold text-indigo-400">30</span>s
+                    </div>
+                </div>
+                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h2 id="question-text" class="text-lg sm:text-xl font-semibold text-white leading-relaxed">
+                    Memuat pertanyaan...
+                </h2>
+            </div>
+
+            <div id="options-container" class="space-y-3"></div>
+
+            <div id="explanation-box" class="hidden p-4 rounded-2xl bg-slate-800/70 border border-slate-700/80 text-sm space-y-1">
+                <div class="font-semibold text-indigo-300 flex items-center space-x-1.5">
+                    <span>💡</span>
+                    <span>Penjelasan</span>
+                </div>
+                <p id="explanation-text" class="text-slate-300"></p>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden py-3 px-6 rounded-xl bg-indigo-600 text-white font-semibold text-sm shadow-md hover:bg-indigo-500 transition-all cursor-pointer">
+                    Soal Selanjutnya ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. RESULT SCREEN -->
+        <div id="result-screen" class="hidden w-full max-w-2xl bg-slate-900/80 border border-slate-800/80 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl space-y-6">
+            <div class="text-center space-y-3">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-3xl">
+                    🏆
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-white">Kuis Selesai!</h2>
+                <p class="text-slate-400 text-sm">Berikut adalah hasil evaluasi pengerjaan kuis MDE kamu.</p>
+                
+                <div class="py-4">
+                    <div class="text-5xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent" id="final-score-percent">0%</div>
+                    <div class="text-xs uppercase tracking-wider text-slate-500 mt-1">Skor Akhir</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-800/50 border border-slate-700/50 p-4 rounded-2xl text-center">
+                        <div class="text-2xl font-bold text-emerald-400" id="final-correct">0</div>
+                        <div class="text-xs text-slate-400 mt-0.5">✅ Benar</div>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-700/50 p-4 rounded-2xl text-center">
+                        <div class="text-2xl font-bold text-rose-400" id="final-wrong">0</div>
+                        <div class="text-xs text-slate-400 mt-0.5">❌ Salah / Kosong</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="restartQuiz()" class="flex-1 py-3 px-6 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm border border-slate-700 transition-all cursor-pointer">
+                        🔄 Ulangi Kuis
+                    </button>
+                    <button onclick="showReviewScreen()" class="flex-1 py-3 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-md transition-all cursor-pointer">
+                        📋 Review Jawaban
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. REVIEW SCREEN -->
+        <div id="review-screen" class="hidden w-full max-w-3xl bg-slate-900/80 border border-slate-800/80 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Review Semua Jawaban</h3>
+                    <p class="text-xs text-slate-400">Periksa kembali jawaban benar dan pilihanmu.</p>
+                </div>
+                <button onclick="backToResult()" class="py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all cursor-pointer">
+                    Kembali ke Skor ↩
+                </button>
+            </div>
+            
+            <div id="review-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 text-center py-4 text-xs text-slate-500 border-t border-slate-900">
+        Manajemen Data Enterprise • Quizizz App Generator
+    </footer>
+
+    <!-- Quiz Logic Script -->
+    <script>
+        const rawQuestions = [
+            { question: "Which of the following tools is NOT used in the data operations management?", options: ["Data Development Tools", "Data Modelling Tools", "Database Management Systems", "Office Productivity Tools"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "Herewith are the ethical principles of data, EXCEPT:", options: ["Justice", "Beneficence", "Evidence", "Respect"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "In what phase of data management is data development done?", options: ["Operations", "Project", "Monitor", "Evaluate"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "The phase to increase the detail of Enterprise Data Model by adding attributes, less-significant entities and relationship is:", options: ["Logical Data Model", "Conceptual Data Model", "Subject Area Data Model", "Physical Data Model"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Which of the following is NOT the main domains of data governance and management?", options: ["Operations", "Development", "External Auditing", "Planning"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "These are the components of data security risk, EXCEPT:", options: ["Impact", "Threat", "Traceability", "Vulnerability"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Which of the following is NOT a best practice in managing users, passwords, and group membership?", options: ["Changes made to the group taxonomy and membership should require some level of approval", "When creating a new user account, the generated password should be set to expire immediately", "Access and update privileges should be granted to individual user accounts", "Manage user identity data and role-group membership data centrally"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "The role of Data Architect are as follows, EXCEPT:", options: ["Provide a standard business vocabulary for data", "Manage data security", "Align with business architecture", "Define current state architecture"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "The role who has approval authority for decisions about data within their domain is:", options: ["Data Owner", "Chief Data Officer", "Technical Data Steward", "Business Data Steward"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Herewith are the drivers of data governance, EXCEPT:", options: ["Pressure", "Regulation", "Needs", "Operation"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "Herewith the most significant risks when developing Data Architecture, EXCEPT:", options: ["Data breach", "Lack of management support", "Culture shock", "Apprehensive sponsor"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "The process to apply rules in order to organise business complexity into stable data structure is:", options: ["Abstraction", "Reverse Engineering", "Normalisation", "Regulation"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Property to identify, describe, or measure an entity is:", options: ["Relationship", "Cardinality", "Foreign key", "Attributes"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "Herewith the techniques to perform data integration and interoperability, EXCEPT:", options: ["SAN", "SOA", "EAI", "ETL"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Which of the following is NOT true?", options: ["Logical data model transform conceptual data model structures by applying two techniques: normalisation and abstraction", "Physical data model is independent of any data technology or specific implementation technical constraints", "A conceptual data model is a visual, high-level perspective on a subject area of importance to the business", "A logical data model often begins as an extension of a conceptual data model, adding data attributes to each entity"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "Which of these statements about data governance is CORRECT?", options: ["Data governance is an enterprise program that stands on its own", "Data governance is a functional, departmental, or project effort", "Data governance is an activity performed by IT and then presented to the Business", "Data governance is how the IT function manages data assets"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Herewith are the foundational activities within DAMA Data Management Function framework, EXCEPT:", options: ["Data Quality Management", "Metadata Management", "Culture Change", "Data Protection Management"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Which of these statements about audit data security is CORRECT?", options: ["Data security auditors may have direct responsibility for the activities being audited", "Auditing is a mistake/fault finding mission", "Internal or external auditors may perform audits", "Auditing is an operational activity performed with the help of analysts"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Data can be stored on a variety of media as follows, EXCEPT:", options: ["Volatile memory", "Disks", "Network", "Flash drives"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Activities to ensure that data privacy and confidentiality are maintained so data is accessed appropriately and not breached is:", options: ["Document and Content Management", "Data Storage and Operations", "Data Security", "Data Integration"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Data governance key processes are as follows, EXCEPT:", options: ["Operations", "Monitor", "Direct", "Evaluate"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Top level management has the accountability to perform the activities, EXCEPT:", options: ["Conformance audit", "Plan development", "Policy development", "Project management"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "The role to manage database technology and operations is:", options: ["Data Modeler", "Data Architect", "Database Administrator", "System Administrator"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Arrange the phases of data science processes below into the correct order: (a) Define big data strategy and business needs, (b) acquire & ingest data sources, (c) choose data sources, (d) explore data using models, (e) develop data science hypotheses and methods, (f) integrate/align data for analysis, (g) deploy and monitor.", options: ["a, c, e, b, f, d, g", "a, b, c, d, e, f, g", "a, c, b, e, f, d, g", "a, c, e, d, b, f, g"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "These are examples of big data sources, EXCEPT:", options: ["Multimedia", "Application", "Social Network", "Sensors"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "Which of the following is NOT a typical OLAP operation?", options: ["Slice & Dice", "Spin", "Pivot", "Drill-down"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "Which of the following is NOT TRUE about data warehousing?", options: ["Operational extract, cleansing, transformation, load, and associated control processes", "Focuses on enabling an integrated and historical business context on operational data", "Also described as decision support", "Also includes processes that interact with meta-data repositories"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Match the characteristic of warehousing to the explanations. Characteristics: (1) Non-volatile, (2) Time-variant, (3) Integrated, (4) Subject-oriented. Explanations: (a) Data is never overwritten or deleted once committed; (b) data elements relating to the same real-world event/object are linked; (c) changes are tracked over time; (d) data from operational systems is made consistent.", options: ["1b, 2c, 3a, 4d", "1a, 2c, 3b, 4d", "1b, 2c, 3d, 4a", "1a, 2c, 3d, 4b"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "Which of the following is NOT a type of taxonomy used when creating the information content architecture?", options: ["Network taxonomy", "Hierarchical taxonomy", "Flat taxonomy", "Cross taxonomy"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "Below is the advantage of designing and using reference & master data management architecture, EXCEPT:", options: ["Elimination of point-to-point interfaces", "Reflect the current state of the hub and spokes", "Standardization of interfaces to the ODS", "Simplifies maintenance changes"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "In establishing a business continuity plan for document and content management, some activities are required, EXCEPT:", options: ["Development of plans for protection", "Identification of vital records", "Maintenance of document management system", "Development of plans for recovery"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Which of the following is NOT a characteristic of a data mart?", options: ["Response time requirements are relaxed", "System usage tends to be ad hoc", "Used for analysis purposes", "Less data involved in each operation/query or process"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "What are the best business intelligence tools used by analysts and information workers?", options: ["Query tools", "Dashboard", "Production reporting tools", "Scorecards"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Which of the following is NOT a benefit of leveraging metadata in an organization?", options: ["Reduce data-oriented research time", "Reduce risk of project failure", "Reduce training costs and lower the impact of staff turnover", "Not shown in the uploaded quiz review"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "Which of the following is NOT a common organizational master data?", options: ["Technology Master Data", "Party Master Data", "Product Master Data", "Location Master Data"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "Which of the following is NOT a principal tool used in data quality management?", options: ["Data Monitoring", "Data Enhancement", "Data Transformation", "Data Profiling"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Reference data management controls the following, EXCEPT:", options: ["Standardized terms, code values and other unique identifiers", "Business relationships within and across domain value lists", "Relevant version of truth about essential business entities", "Business definitions for each value"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Arrange the phases of metadata strategy implementation into the correct order: (a) Assess existing metadata sources and information architecture, (b) Conduct key stakeholder interviews, (c) Develop implementation strategy and plan, (d) Metadata strategy initiation and planning, (e) Develop future metadata architecture.", options: ["d, b, a, e, c", "d, a, b, e, с", "d, a, e, b, с", "d, b, e, a, c"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "These are tools that can be used to manage big data, EXCEPT:", options: ["In-memory computing", "Machine learning", "In-database algorithms", "In-memory database"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "What is the technique to perform Big Data Analytics?", options: ["ETL", "TEL", "LET", "TO"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "How often data changes occur and therefore how long the data is useful is the characteristic of big data as follows:", options: ["Veracity", "Volatility", "Volume", "Velocity"], answer: 1, explanation: "Jawaban yang benar adalah opsi B." },
+            { question: "Which of the following is NOT a way to correct data quality defects?", options: ["Manual dimension correction", "Manual directed correction", "Automated correction", "Manual correction"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Which of the following is a type of metadata?", options: ["Operational Metadata", "Data Architect", "Unstructured Metadata", "Technology Metadata"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Who has the responsibility for maintaining reference data values and associated metadata?", options: ["Data Analyst", "Data Architects", "Data Providers", "Business Data Stewards"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "Which of the following is NOT a data match rule?", options: ["Match-combine rules", "Duplicate identification match rules.", "Match-link rules", "Match-merge rules"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Arrange the steps of document/record management lifecycle activities into the correct order: (a) Retrieve and circulate, (b) Classify documents/records, (c) Identify existing and newly created documents/records, (d) Preserve and dispose, (e) Retain, (f) Create, approve, and enforce policies, (g) Store.", options: ["c, b, f, g, e, a, d", "c, f, b, e, g, d, a", "c, b, f, g, e, d, a", "c, f, b, e, g, a, d"], answer: 3, explanation: "Jawaban yang benar adalah opsi D." },
+            { question: "Which of the following is described as a collection of detailed data that satisfies the collective, integrated, operational needs of the corporation?", options: ["Data Warehouse", "Data Marts", "Operational Data Store", "Operational Data Mart"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Arrange the procedures of designing and implementing operational data quality management into the correct order: (a) Diagnosis and evaluation of remediation alternatives, (b) Reporting, (c) Resolving the issue, (d) Inspection and monitoring.", options: ["a, c, b, d", "c, a, d, b", "d, a, c, b", "a, c, d, b"], answer: 2, explanation: "Jawaban yang benar adalah opsi C." },
+            { question: "Organizations determine golden values by performing the activities below, EXCEPT:", options: ["Assessing data integration complexity and cost", "Incorporating data quality controls into the applications", "Applying data quality rules and matching rules", "Analyzing data quality"], answer: 0, explanation: "Jawaban yang benar adalah opsi A." },
+            { question: "Apa yang paling tepat menggambarkan Data Security Management dalam konteks manajemen data enterprise?", options: ["Proses menyimpan seluruh data organisasi dalam satu database tanpa membatasi pengguna", "Proses mencadangkan data secara berkala agar tidak hilang ketika terjadi gangguan sistem", "Perencanaan, pengembangan, dan pelaksanaan kebijakan serta prosedur untuk autentikasi, otorisasi, akses, dan audit data", "Proses menghapus data yang sudah tidak digunakan untuk mengurangi kebutuhan penyimpanan"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "Manakah pernyataan berikut yang merupakan salah satu tujuan Data Security Management?", options: ["Memungkinkan akses dan perubahan data yang sesuai sekaligus mencegah akses dan perubahan yang tidak sesuai", "Memberikan hak mengubah seluruh data kepada semua karyawan agar pekerjaan lebih cepat", "Menghilangkan seluruh proses audit karena data sudah dilindungi oleh kata sandi", "Menyamakan tingkat kerahasiaan semua informasi tanpa mempertimbangkan kebutuhan pemangku kepentingan"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Dalam Data Security Management Context Diagram, aktivitas Define Data Security Controls and Procedures dikelompokkan ke dalam jenis aktivitas apa?", options: ["Planning (P)", "Development (D)", "Control (C)", "Operational (O)"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Tim keamanan melakukan aktivitas Monitor User Authentication and Access Behavior. Manakah keluaran yang paling sesuai dengan aktivitas tersebut?", options: ["Data Security Policy dan Data Security Standards", "User Accounts, Passwords, dan Role Groups", "Classified Documents dan Classified Databases", "Data Access Logs, Security Notification Alerts, dan Data Security Reports"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Sebuah perusahaan memiliki ratusan pegawai dengan tanggung jawab yang serupa. Administrator ingin menghindari pemberian hak akses secara berulang kepada setiap akaun. Pendekatan manakah yang paling sesuai dengan materi?", options: ["Menggunakan satu akun bersama untuk seluruh pegawai dalam departemen", "Mendefinisikan privilege berdasarkan role group dan mendaftarkan pengguna ke grup yang sesuai", "Memberikan seluruh privilege kepada setiap pengguna lalu membatasi aktivitasnya melalui laporan bulanan", "Membuat kata sandi identik untuk semua pegawai dengan jabatan yang sama"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Dalam security role hierarchy, apa hubungan hak akses child role terhadap parent role sebagaimana dijelaskan dalam materi?", options: ["Child role selalu mendapatkan seluruh privilege tambahan yang tidak dimiliki parent role", "Child role tidak boleh memiliki privilege apa pun yang sama dengan parent role", "Child role digunakan untuk mempersempit privilege yang dimiliki parent role", "Child role harus memberikan hak DELETE kepada semua anggotanya"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "Seorang pengguna dimasukkan ke empat role group sekaligus. Meskipun sistem mengizinkannya, apa risiko utama praktik ini menurut materi?", "options": ["Pengguna tidak dapat melakukan autentikasi melalui enterprise directory", "Kata sandi pengguna otomatis menjadi tidak memenuhi standar kompleksitas", "Semua data yang diakses pengguna otomatis berubah menjadi publik", "Administrator menjadi lebih sulit memahami privilege spesifik yang diterima pengguna tersebut"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Administrator akan mengubah struktur role group serta memindahkan beberapa pengguna ke grup lain. Prosedur manakah yang paling tepat diterapkan?", "options": ["Meminta persetujuan yang diperlukan dan melacak perubahan melalui change management system", "Melakukan perubahan langsung tanpa pencatatan agar proses administrasi lebih sederhana", "Mengizinkan setiap pengguna mengubah sendiri keanggotaan role group tanpa persetujuan", "Menonaktifkan seluruh mekanisme otorisasi selama perubahan keanggotaan berlangsung"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Informasi identitas pegawai disimpan pada beberapa aplikasi yang berbeda. Akibatnya, nama jabatan dan keanggotaan grup untuk orang yang sama sering tidak konsisten. Apa tindakan yang paling sesuai dengan materi?", "options": ["Mempertahankan seluruh salinan identitas dan meminta pegawai memilih data yang benar setiap kali masuk", "Menghapus informasi keanggotaan grup dari seluruh sistem agar tidak ada perbedaan data", "Mengelola data identitas pengguna dan keanggotaan role group secara terpusat", "Mengizinkan setiap aplikasi menentukan identitas pegawai secara independen tanpa sinkronisasi"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "Manakah ketentuan kata sandi berikut yang sesuai dengan contoh password complexity requirements pada materi?", "options": ["Kata sandi tidak boleh sama dengan salah satu dari lima kata sandi yang terakhir digunakan", "Kata sandi boleh sama dengan username asalkan mengandung angka", "Kata sandi kosong diperbolehkan apabila pengguna hanya memiliki hak READ", "Kata sandi sebaiknya menggunakan karakter berdekatan pada keyboard agar mudah diingat"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Ketika administrator membuat akun baru dan sistem menghasilkan kata sandi awal, apa tindakan yang direkomendasikan dalam materi?", "options": ["Menetapkan kata sandi awal agar tidak pernah kedaluwarsa", "Mengizinkan administrator menggunakan kata sandi awal tersebut untuk seluruh akun baru", "Menunda pergantian kata sandi sampai pengguna meminta bantuan help desk", "Mengatur kata sandi awal agar segera kedaluwarsa sehingga pengguna menetapkan kata sandinya sendiri"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Sebuah organisasi menggunakan enterprise user directory sehingga pegawai cukup memasukkan kata sandi saat login ke workstation. Akses ke aplikasi lain kemudian mengacu pada direktori tersebut. Kemampuan ini disebut apa?", "options": ["Data classification", "Single-sign-on", "Data security auditing", "Change control"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Sebuah tabel memuat informasi pelanggan yang bersifat sensitif. Organisasi menerapkan mekanisme opt-in untuk hak akses data tersebut. Apa konsekuensi utamanya?", "options": ["Pengguna tidak dapat melakukan tindakan atas data sensitif jika belum memperoleh permission yang sesuai", "Semua pengguna otomatis dapat melihat data asalkan sudah memiliki akun aplikasi", "Pengguna yang tidak mempunyai permission tetap dapat mengubah data melalui database view", "Hak akses hanya dibatasi berdasarkan jam kerja tanpa memperhatikan permission pengguna"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Seorang manajer cabang hanya boleh melihat baris transaksi milik cabangnya sendiri, sedangkan baris transaksi cabang lain harus disembunyikan. Mekanisme manakah yang paling tepat menurut materi?", "options": ["Memberikan hak READ terhadap seluruh tabel transaksi kepada semua manajer", "Menyimpan transaksi setiap cabang dalam kata sandi pengguna yang berbeda", "Mengubah klasifikasi seluruh transaksi menjadi For General Audiences", "Menggunakan relational database view yang membatasi baris berdasarkan nilai data tertentu"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Staf operasional perlu melihat nama dan nomor pelanggan, tetapi tidak boleh melihat kolom yang berisi informasi yang lebih rahasia. Solusi manakah yang didukung oleh materi?", "options": ["Menghapus seluruh kolom rahasia secara permanen dari database", "Menggunakan database view untuk membatasi akses ke kolom tertentu", "Mengizinkan akses ke semua kolom lalu meminta staf tidak membuka kolom rahasia", "Memberikan privilege DELETE agar staf dapat menyembunyikan kolom yang tidak diperlukan"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Sistem mendeteksi transaksi akses data yang tidak biasa pada malam hari. Mengapa kegiatan monitoring authentication and access behavior penting dalam situasi ini?", "options": ["Karena monitoring otomatis menggantikan seluruh kebutuhan perencanaan keamanan dan audit", "Karena monitoring memastikan setiap transaksi yang tidak biasa pasti merupakan pelanggaran", "Karena monitoring dapat mengungkap aktivitas mencurigakan yang perlu diselidiki serta menyediakan riwayat akses untuk audit kepatuhan", "Karena monitoring memungkinkan seluruh pengguna memperoleh hak akses tambahan secara otomatis"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "Dokumen strategi keuangan hanya boleh dibuka oleh pegawai dengan peran tertentu yang memiliki kebutuhan untuk mengetahui isinya dan mungkin memerlukan security clearance. Klasifikasi manakah yang paling sesuai?", "options": ["Restricted Confidential", "Internal Use Only", "For General Audiences", "Registered Confidential"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Sebuah organisasi menetapkan bahwa siapa pun yang akan mengakses dokumen tertentu wajib menandatangani perjanjian hukum dan bertanggung jawab menjaga kerahasiaannya. Tingkat klasifikasi apa yang paling sesuai?", "options": ["Confidential", "Registered Confidential", "Internal Use Only", "For General Audiences"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Sebuah panduan kerja dibatasi untuk pegawai organisasi. Panduan tersebut boleh ditampilkan atau didiskusikan, tetapi tidak boleh disalin ke luar organisasi. Menurut skema klasifikasi pada materi, panduan ini termasuk kategori apa?", "options": ["For General Audiences", "Registered Confidential", "Restricted Confidential", "Internal Use Only"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Manakah pendekatan yang paling tepat untuk melaksanakan Audit Data Security?", "options": ["Meminta orang yang bertanggung jawab langsung atas proses tersebut untuk mengaudit hasil kerjanya sendiri", "Menggunakan audit terutama untuk mencari individu yang harus disalahkan ketika ditemukan kelemahan", "Menggunakan auditor independen untuk menghasilkan penilaian objektif dan rekomendasi perbaikan yang praktis", "Menghindari pemberian rekomendasi kepada manajemen karena audit hanya berfungsi mencatat aktivitas pengguna"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "An organization wants to establish a process for storing, inventorying, and controlling both paper and electronic records. Which practice best describes this activity?", "options": ["Enterprise taxonomy development", "Document management", "Website content publishing", "Search engine optimization"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "A company organizes and categorizes information so that it can be stored, published, and reused across different departments. Which concept is being applied?", "options": ["Document disposal", "Physical records inventory", "Enterprise content management", "Document check-out"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "Which of the following is the best example of unstructured data as described in document and content management?", "options": ["A video recording that has not been tagged or organized into records", "A customer table with predefined columns and primary keys", "A relational database table containing employee IDs", "A structured transaction table with fixed fields"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Which of the following sequences correctly represents the four main stages used when planning a document's lifecycle?", "options": ["Distribution, creation or receipt, archiving, organization for retrieval", "Archiving, distribution, organization for retrieval, creation or receipt", "Organization for retrieval, archiving, creation or receipt, distribution", "Creation or receipt, organization for retrieval, distribution, archiving or disposition"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "A records manager is designing a classification system and taxonomy for thousands of organizational documents. What is the main intended benefit?", "options": ["Eliminating the need for retention policies", "Preventing the creation of electronic documents", "Making documents easier to retrieve", "Replacing all documents with structured database tables"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "During the capture of electronic documents, which action is necessary to help users find those documents later?", "options": ["Indexing the documents", "Immediately disposing of the documents", "Removing document attributes", "Restricting all documents to paper storage"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "A project team needs to check documents in and out, compare revisions, track versions, and archive earlier copies. Which facility best supports these activities?", "options": ["A paper-only filing cabinet", "A keyword-free website", "A basic spreadsheet without version control", "A document repository"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "A critical document requires a formal change request, thorough impact evaluation, approval by a change authority, and full status accounting. Which level of control applies?", "options": ["Custody", "Formal", "Revision", "Informal"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "When an internal document changes, the organization requires notification to stakeholders and an incremented version number, but no formal change authority. Which control level is most appropriate?", "options": ["Formal", "Custody", "Revision", "Disposal"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "A low-criticality document only needs safe storage and a reliable means of retrieval. Which control level best matches this requirement?", "options": ["Custody", "Formal", "Revision", "Audit"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "An organization is preparing a disaster recovery plan for its documents and records. Which of the following is a required activity?", "options": ["Deleting vital records to reduce storage costs", "Identifying vital records and developing protection and recovery plans", "Replacing recovery procedures with a search engine", "Keeping recovery procedures separate from corporate backup activities"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "A company specifies how long records must be maintained and when inactive records can move to secondary storage or be disposed of. Which program governs these decisions?", "options": ["Enterprise taxonomy mapping", "Digital asset publishing", "Search result ranking", "Retention and disposition"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Why should an organization periodically audit its document and records management practices?", "options": ["To ensure the right information reaches the right people at the right time", "To eliminate the need for document classification", "To guarantee that every document is stored permanently", "To replace all operational decisions with automated searches"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "A university maintains its intranet by creating, editing, storing, organizing, and publishing digital articles through a controlled process. Which system is typically responsible?", "options": ["A disaster recovery system only", "A physical inventory management system", "A content management system", "A document destruction service"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "An enterprise defines relationships between content items, their required attributes, and the structure used to organize them. What is being developed?", "options": ["A document retention calendar", "Information Content Architecture", "A backup rotation schedule", "A change approval log"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "A taxonomy classifies countries into a controlled list of categories without relationships or hierarchy among those categories. Which type of taxonomy is this?", "options": ["Network taxonomy", "Hierarchical taxonomy", "Facet taxonomy", "Flat taxonomy"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "A digital content object is described by creator, title, keywords, and access rights, each treated as an attribute of the same object. Which taxonomy type is illustrated?", "options": ["Facet taxonomy", "Flat taxonomy", "Hierarchical taxonomy", "Network taxonomy"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "A classification system lets users move from continent to country to city and then to address, refining the category at each level. Which taxonomy is being used?", "options": ["Facet taxonomy", "Flat taxonomy", "Hierarchical taxonomy", "Network taxonomy"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "An online library recommends related materials using associations between content items, including links across different classification categories. Which taxonomy best fits this approach?", "options": ["Flat taxonomy", "Network taxonomy", "Hierarchical taxonomy only", "Facet taxonomy only"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "A search engine uses software that roams the Web and stores URLs of content it encounters. Which component performs this function?", "options": ["Retention scheduler", "Change authority", "Document repository", "Spider software"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Which of the following best describes the purpose of Reference Data Management?", "options": ["Recording every transaction performed by an organization", "Controlling standardized domain values and ensuring their consistent use across systems", "Storing only unstructured documents and images", "Replacing all master data with transaction data"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "A help desk system uses the values New, Assigned, Work In Progress, and Resolved to indicate ticket status. These values are an example of:", "options": ["Internally defined reference data", "Product master data", "Transactional data lineage", "Financial master data"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "A data integration team maps the codes CA, US-CA, and 06 to the same state, California. Which concept is being applied?", "options": ["Data replication scheduling", "Match-merge rules", "Cross-reference data", "Product master data"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "An organization uses UNSPSC codes to classify products from broad categories into more specific categories using parent-child relationships. What type of reference data is this?", "options": ["Financial master data", "Transactional data", "Location master data", "Taxonomic reference data"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "Who is responsible for maintaining reference data code values, descriptions, and business definitions, including monitoring changes to external standards?", "options": ["Application end users only", "Business data stewards", "External customers only", "Network administrators only"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Which statement correctly distinguishes master data from reference data?", "options": ["Master data must always use a fixed list of predefined domain values", "Reference data describes individual customers and employees in every transaction", "Master data describes essential business entities that provide context for transactions", "Master data never follows rules about formats or allowable ranges"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "A university maintains records describing its students and lecturers and the roles they play in the institution. Which master data category best fits these records?", "options": ["Party master data", "Product master data", "Financial master data", "Location reference data"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Data about organizational cost centers, general ledger accounts, budgets, and projections belongs primarily to:", "options": ["Party master data", "Location master data", "Taxonomic reference data", "Financial master data"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "A manufacturing company maintains bill-of-materials structures, component usage, product versions, and design documents. Which type of master data is most relevant?", "options": ["Party master data", "Product master data", "Location reference data", "Order-status reference data"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Which of the following is the best example of location master data rather than location reference data?", "options": ["An official list of country codes", "A standardized list of province names", "A customer's address and geographic coordinates", "A table of postal-code formats"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "Which of the following is a primary goal of Reference and Master Data Management?", "options": ["Providing an authoritative source of reconciled, high-quality data", "Encouraging separate definitions of the same entity in each application", "Eliminating the need for data quality measurements", "Preventing business intelligence systems from reusing data"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "In a hub-and-spoke reference data architecture, what is the main function of the database of record?", "options": ["Storing only temporary copies of reports", "Allowing each application to define its own conflicting codes", "Receiving updates only from data marts", "Acting as the authoritative hub that supplies data to other applications"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "A source system publishes a reference data change, and subscribed application databases receive the update shortly afterward without a coordinated real-time transaction. Which approach is illustrated?", "options": ["Manual data entry into every database", "Asynchronous subscribe-and-publish replication", "Synchronous coordinated updates across databases", "Deletion of all replicated data"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "An organization routes reference and master data from several systems of record through a shared operational data store (ODS). What is a key advantage of this design?", "options": ["It requires more point-to-point interfaces between all applications", "It removes the need to manage data sources", "It standardizes interfaces and reduces point-to-point integration complexity", "It prevents applications from accessing shared master data"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "What is a likely consequence of managing reference and master data separately in application silos without a data integration architecture?", "options": ["Redundant and inconsistent data across applications", "Automatic creation of a single golden record", "Complete elimination of data quality problems", "Standardized definitions in every application by default"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "Which activity is an example of a common service that should be supported by a data integration architecture?", "options": ["Allowing every application to apply unrelated matching rules", "Disabling change approval for shared data", "Removing audit and error-resolution information", "Applying consistent data quality checks and matching rules"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." },
+            { question: "A company wants to flag potentially duplicate customer records for review, but it does not want the system to merge them automatically. Which matching approach should be used?", "options": ["Match-link rules", "Duplicate identification match rules", "Match-merge rules", "Data replication rules"], "answer": 1, "explanation": "Jawaban yang benar adalah opsi B." },
+            { question: "Two systems contain complementary and conflicting information about the same supplier. The organization wants to reconcile these records into one comprehensive record. Which matching approach is most appropriate?", "options": ["Duplicate identification without further action", "Data classification using a taxonomy", "Match-merge rules", "Match-link rules without modifying record contents"], "answer": 2, "explanation": "Jawaban yang benar adalah opsi C." },
+            { question: "An organization needs to establish a relationship between records referring to the same person while preserving the original content of each record. Which approach is most suitable?", "options": ["Match-link rules", "Match-merge rules", "Deleting all duplicate records immediately", "Converting the records into reference value domains"], "answer": 0, "explanation": "Jawaban yang benar adalah opsi A." },
+            { question: "What does a golden master data value represent?", "options": ["The first value entered into any application, regardless of its accuracy", "A value that must remain unchanged even when the business entity changes", "The value stored in the system with the oldest database", "The most accurate, current, and relevant value selected for consistent shared use"], "answer": 3, "explanation": "Jawaban yang benar adalah opsi D." }
+        ];
+
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let userAnswers = [];
+        let timer = null;
+        let timeLeft = 30;
+        let isAnswered = false;
+
+        function startQuiz() {
+            questions = JSON.parse(JSON.stringify(rawQuestions));
+            shuffleArray(questions);
+            
+            currentIdx = 0;
+            score = 0;
+            userAnswers = new Array(questions.length).fill(null);
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('quiz-header-info').classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            clearInterval(timer);
+            timeLeft = 30;
+            document.getElementById('time-left').innerText = timeLeft;
+            document.getElementById('explanation-box').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const q = questions[currentIdx];
+            document.getElementById('current-q-num').innerText = currentIdx + 1;
+            document.getElementById('total-q-num').innerText = questions.length;
+            document.getElementById('question-text').innerText = q.question;
+
+            const progressPct = ((currentIdx) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = progressPct + '%';
+            document.getElementById('progress-text').innerText = `Soal ${currentIdx + 1} dari ${questions.length}`;
+
+            let optionObjs = q.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
+            shuffleArray(optionObjs);
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            optionObjs.forEach((optObj, i) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-sm sm:text-base font-medium transition-all cursor-pointer flex items-center space-x-3 group";
+                btn.innerHTML = `
+                    <span class="flex-shrink-0 w-8 h-8 rounded-xl bg-slate-700/50 text-slate-300 flex items-center justify-center font-bold text-xs group-hover:bg-indigo-600 group-hover:text-white transition-colors">${String.fromCharCode(65 + i)}</span>
+                    <span class="flex-grow">${optObj.text}</span>
+                `;
+                btn.onclick = () => selectAnswer(optObj.originalIndex, q.answer);
+                optionsContainer.appendChild(btn);
+            });
+
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-left').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeOutAnswer(q.answer);
+                }
+            }, 1000);
+        }
+
+        function selectAnswer(selectedIndex, correctIndex) {
+            if (isAnswered) return;
+            isAnswered = true;
+            clearInterval(timer);
+
+            userAnswers[currentIdx] = selectedIndex;
+
+            const buttons = document.getElementById('options-container').children;
+            
+            for (let btn of buttons) {
+                btn.disabled = true;
+                const textSpan = btn.querySelector('.flex-grow').innerText;
+                const q = questions[currentIdx];
+                const originalIdx = q.options.indexOf(textSpan);
+
+                if (originalIdx === correctIndex) {
+                    btn.className = "w-full text-left p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 text-sm sm:text-base font-medium flex items-center space-x-3";
+                } else if (originalIdx === selectedIndex && selectedIndex !== correctIndex) {
+                    btn.className = "w-full text-left p-4 rounded-2xl bg-rose-500/20 border border-rose-500/50 text-rose-200 text-sm sm:text-base font-medium flex items-center space-x-3";
+                } else {
+                    btn.className = "w-full text-left p-4 rounded-2xl bg-slate-800/20 border border-slate-800 text-slate-500 text-sm sm:text-base font-medium flex items-center space-x-3 opacity-50";
+                }
+            }
+
+            if (selectedIndex === correctIndex) {
+                score++;
+            }
+
+            showExplanation();
+        }
+
+        function timeOutAnswer(correctIndex) {
+            if (isAnswered) return;
+            isAnswered = true;
+            userAnswers[currentIdx] = null;
+
+            const buttons = document.getElementById('options-container').children;
+            for (let btn of buttons) {
+                btn.disabled = true;
+                const textSpan = btn.querySelector('.flex-grow').innerText;
+                const q = questions[currentIdx];
+                const originalIdx = q.options.indexOf(textSpan);
+
+                if (originalIdx === correctIndex) {
+                    btn.className = "w-full text-left p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 text-sm sm:text-base font-medium flex items-center space-x-3";
+                } else {
+                    btn.className = "w-full text-left p-4 rounded-2xl bg-slate-800/20 border border-slate-800 text-slate-500 text-sm sm:text-base font-medium flex items-center space-x-3 opacity-50";
+                }
+            }
+
+            showExplanation();
+        }
+
+        function showExplanation() {
+            const q = questions[currentIdx];
+            document.getElementById('explanation-text').innerText = q.explanation;
+            document.getElementById('explanation-box').classList.remove('hidden');
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.classList.remove('hidden');
+            if (currentIdx === questions.length - 1) {
+                nextBtn.innerText = "Lihat Hasil 🎉";
+            } else {
+                nextBtn.innerText = "Soal Selanjutnya ➔";
+            }
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('quiz-header-info').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const percent = Math.round((score / questions.length) * 100);
+            document.getElementById('final-score-percent').innerText = percent + '%';
+            document.getElementById('final-correct').innerText = score;
+            document.getElementById('final-wrong').innerText = questions.length - score;
+
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        function showReviewScreen() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.remove('hidden');
+
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const correctAns = q.answer;
+                const isCorrect = userAns === correctAns;
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `p-4 rounded-2xl border ${isCorrect ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-rose-500/5 border-rose-500/30'} space-y-2`;
+                
+                let optionsHtml = '';
+                q.options.forEach((opt, oIdx) => {
+                    let badgeClass = "text-slate-400";
+                    if (oIdx === correctAns) {
+                        badgeClass = "text-emerald-400 font-bold";
+                    } else if (oIdx === userAns && !isCorrect) {
+                        badgeClass = "text-rose-400 font-bold line-through";
+                    }
+                    optionsHtml += `<div class="text-xs sm:text-sm ${badgeClass}">• ${opt} ${oIdx === correctAns ? '(Benar)' : ''} ${oIdx === userAns && oIdx !== correctAns ? '(Pilihanmu)' : ''}</div>`;
+                });
+
+                itemDiv.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-indigo-400">Soal ${idx + 1}</span>
+                        <span class="text-xs font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Benar' : '❌ Salah / Kosong'}</span>
+                    </div>
+                    <p class="text-sm sm:text-base font-semibold text-white">${q.question}</p>
+                    <div class="space-y-1 pl-2 border-l-2 border-slate-700">
+                        ${optionsHtml}
+                    </div>
+                    <p class="text-xs text-slate-400 pt-1 italic">💡 ${q.explanation}</p>
+                `;
+                reviewList.appendChild(itemDiv);
+            });
+        }
+
+        function backToResult() {
+            document.getElementById('review-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    </script>
+</body>
+</html>
